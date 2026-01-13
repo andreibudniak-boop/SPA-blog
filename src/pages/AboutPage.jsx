@@ -1,11 +1,11 @@
 import React from "react";
 import Footer from "../components/Footer.jsx";
 import Header from "../components/Header.jsx";
-import { Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 function AboutPage() {
   return (
-    <div>
+    <Box>
       <Header title="About Page" />
       <Typography sx={{ m: 5 }}>
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores neque
@@ -14,7 +14,7 @@ function AboutPage() {
         ducimus.
       </Typography>
       <Footer />
-    </div>
+    </Box>
   );
 }
 

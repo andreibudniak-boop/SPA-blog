@@ -3,10 +3,12 @@ import "./App.css";
 import HomePage from "./pages/HomePage.jsx";
 import AboutPage from "./pages/AboutPage.jsx";
 import SortPage from "./pages/SortPage.jsx";
+import { ThemeProvider } from "@mui/material";
+import { theme } from "./theme/theme.js";
 
 function App() {
   return (
-    <>
+    <ThemeProvider theme={theme}>
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -14,7 +16,7 @@ function App() {
           <Route path="/sort" element={<SortPage />} />
         </Routes>
       </Router>
-    </>
+    </ThemeProvider>
   );
 }
 
