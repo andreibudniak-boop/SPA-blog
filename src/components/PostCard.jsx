@@ -1,5 +1,4 @@
-import React from "react";
-import { Card, CardContent, Typography, Button, Box } from "@mui/material";
+import { Card, CardContent, Typography } from "@mui/material";
 
 function PostCard({ post }) {
   return (
@@ -16,9 +15,11 @@ function PostCard({ post }) {
           {post.title}
         </Typography>
         <Typography sx={{ color: "text.info", mb: 1.5 }}>
-          {post.description}
+          {post.body}
         </Typography>
-        <Typography sx={{ color: "text.secondary" }}>{post.author}</Typography>
+        <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
+          Author id:{post.userId}
+        </Typography>
       </CardContent>
     </Card>
   );
