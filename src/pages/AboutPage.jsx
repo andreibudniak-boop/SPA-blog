@@ -1,20 +1,27 @@
-import Footer from "../components/Footer.jsx";
-import Header from "../components/Header.jsx";
-import { Box, Typography } from "@mui/material";
+import Footer from '../components/Footer.jsx'
+import Header from '../components/Header.js'
+import { Box, Typography, Toolbar } from '@mui/material'
+import { useTitle } from 'react-use'
+import { useHeader } from '../context/HeaderContext.tsx'
+import { useEffect } from 'react'
 
 function AboutPage() {
+  useTitle('About')
+  const [, setHeaderProps] = useHeader()
+  useEffect(() => {
+    setHeaderProps('AboutPage')
+  }, [])
+
   return (
     <Box>
-      <Header title="About Page" />
       <Typography sx={{ m: 5 }}>
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores neque
         assumenda cum repudiandae ab officiis, sed ex voluptas provident optio.
         Eaque, voluptate placeat? Quibusdam molestiae perspiciatis rerum aut, ab
         ducimus.
       </Typography>
-      <Footer />
     </Box>
-  );
+  )
 }
 
-export default AboutPage;
+export default AboutPage

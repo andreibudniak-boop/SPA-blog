@@ -1,39 +1,55 @@
-import Footer from "../components/Footer.jsx";
-import Header from "../components/Header.jsx";
-import SearchBar from "../components/SearchBar.jsx";
-import { useState } from "react";
-import PostCard from "../components/PostCard.jsx";
-import { usePosts } from "../context/PostContext.jsx";
+import SearchBar from '../components/SearchBar.jsx'
+import { useState, useEffect } from 'react'
+import PostCard from '../components/PostCard.jsx'
+import { useTitle } from 'react-use'
+import { useDispatch, useSelector } from 'react-redux'
+import { Toolbar, Box } from '@mui/material'
+import { fetchPosts } from '../store/actions/postsActions.js'
+import { useHeader } from '../context/HeaderContext.tsx'
 
 function SortPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const { posts, loading, error, refetch } = usePosts();
+  useTitle('sort')
+  const [, setHeaderProps] = useHeader()
+  useEffect(() => {
+    setHeaderProps('SortPage')
+  }, [])
+
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const dispatch = useDispatch()
+  const { posts, loading, error } = useSelector(state => state.posts)
+
+  useEffect(() => {
+    dispatch(fetchPosts())
+  }, [dispatch])
 
   const filterPosts = () => {
     if (!searchQuery.trim()) {
-      return posts;
+      return posts
     }
 
-    const query = searchQuery.toLowerCase();
-    return posts.filter((post) => post.title.toLowerCase().includes(query));
-  };
+    const query = searchQuery.toLowerCase()
+    return posts.filter(post => post.title.toLowerCase().includes(query))
+  }
 
-  const filteredPosts = filterPosts();
+  const filteredPosts = filterPosts()
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-  };
+  const handleSearch = query => {
+    setSearchQuery(query)
+  }
 
   return (
-    <div>
-      <Header title="Sort Page" />
+    <Box>
+      <Toolbar />
       <SearchBar onSearch={handleSearch} />
-      {filteredPosts.map((post) => (
-        <PostCard key={post.id} post={post} />
-      ))}
-      <Footer />
-    </div>
-  );
+      <Toolbar />
+      <Box sx={{ ml: 2, mr: 2 }}>
+        {filteredPosts.map(post => (
+          <PostCard key={post.id} post={post} />
+        ))}
+      </Box>
+    </Box>
+  )
 }
 
-export default SortPage;
+export default SortPage
