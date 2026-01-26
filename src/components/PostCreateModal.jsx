@@ -1,5 +1,3 @@
-import { useDispatch } from 'react-redux'
-import { createPost } from '../store/actions/postsActions.js'
 import { useState } from 'react'
 import {
   Button,
@@ -10,19 +8,27 @@ import {
   DialogActions,
   TextField,
   Alert,
+  CircularProgress,
 } from '@mui/material'
 
-function PostCreateModal({ open, onClose, onSuccess, onError }) {
-  const dispatch = useDispatch()
+function PostCreateModal({
+  open,
+  onClose,
+  onSuccess,
+  onError,
+  createPost,
+  isCreating,
+}) {
   const [localError, setLocalError] = useState('')
   const [formData, setFormData] = useState({
     title: '',
     body: '',
     userId: '',
   })
+
   const handleSubmit = async e => {
-    setLocalError('')
     e.preventDefault()
+    setLocalError('')
 
     if (!formData.title.trim()) {
       setLocalError('Заголовок обязателен')
@@ -34,19 +40,21 @@ function PostCreateModal({ open, onClose, onSuccess, onError }) {
       return
     }
 
-    dispatch(
-      createPost(
-        formData,
-        createdPost => {
-          onSuccess()
-          setFormData({ title: '', userId: '', body: '' })
-          onClose()
-        },
-        errorMessage => {
-          onError(errorMessage)
-        }
-      )
-    )
+    if (!formData.body.trim()) {
+      setLocalError('Текст обязателен')
+      return
+    }
+
+    try {
+      await createPost(formData).unwrap()
+      setFormData({ title: '', userId: '', body: '' })
+      onSuccess()
+    } catch (error) {
+      const errorMessage =
+        error?.data?.message || error?.message || 'Неизвестная ошибка'
+      setLocalError(errorMessage)
+      onError(errorMessage)
+    }
   }
 
   const handleChange = event => {
@@ -55,73 +63,96 @@ function PostCreateModal({ open, onClose, onSuccess, onError }) {
       ...prev,
       [name]: value,
     }))
+    if (localError) {
+      setLocalError('')
+    }
+  }
+
+  const handleClose = () => {
+    if (!isCreating) {
+      setFormData({ title: '', userId: '', body: '' })
+      setLocalError('')
+      onClose()
+    }
   }
 
   return (
     <Dialog
       open={open}
-      onClose={() => onClose()}
+      onClose={handleClose}
       maxWidth="xs"
       fullWidth
       disableEnforceFocus={false}
       disableAutoFocus={false}
     >
-      <DialogTitle>Создать</DialogTitle>
+      <DialogTitle>Создать пост</DialogTitle>
 
       {localError && (
-        <Alert severity="error" sx={{ mx: 3, mt: 1 }}>
+        <Alert
+          severity="error"
+          sx={{ mx: 3, mt: 1 }}
+          onClose={() => setLocalError('')}
+        >
           {localError}
         </Alert>
       )}
+
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <Stack spacing={2}>
             <TextField
-              id="outlined-basic"
+              id="title-input"
               name="title"
               onChange={handleChange}
               value={formData.title}
-              label="Title"
+              label="Заголовок"
               variant="outlined"
               required
               error={!!localError && localError.includes('Заголовок')}
+              disabled={isCreating}
+              fullWidth
             />
 
             <TextField
-              id="outlined-basic"
+              id="user-id-input"
               name="userId"
               onChange={handleChange}
               value={formData.userId}
-              label="userId"
+              label="User ID"
               variant="outlined"
               required
               error={!!localError && localError.includes('User ID')}
+              disabled={isCreating}
+              type="number"
+              fullWidth
             />
 
             <TextField
-              id="outlined-basic"
+              id="body-input"
               name="body"
               onChange={handleChange}
               value={formData.body}
-              label="Text"
+              label="Текст поста"
               variant="outlined"
               multiline
               rows={4}
               required
+              error={!!localError && localError.includes('Текст')}
+              disabled={isCreating}
+              fullWidth
             />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ mr: 2, mb: 2 }}>
-          <Button
-            onClick={() => {
-              setFormData({ title: '', userId: '', body: '' })
-              setLocalError('')
-              onClose()
-            }}
-          >
+          <Button onClick={handleClose} disabled={isCreating} color="inherit">
             Отмена
           </Button>
-          <Button type="submit" variant="contained">
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={isCreating}
+            startIcon={isCreating ? <CircularProgress size={20} /> : null}
+          >
             Сохранить
           </Button>
         </DialogActions>

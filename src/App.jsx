@@ -13,7 +13,7 @@ import {
 } from '@mui/material'
 import { useTitle } from 'react-use'
 import { Provider } from 'react-redux'
-import store from './store/index.js'
+import store from './app/store.js'
 import { useThemeContext } from './theme/ThemeContext'
 import Footer from './components/Footer.js'
 import { HeaderProvider } from './context/HeaderContext.tsx'

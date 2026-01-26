@@ -13,17 +13,18 @@ import {
 } from '@mui/material'
 import { useTitle } from 'react-use'
 import { useState, useEffect } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { fetchPosts, createPost } from '../store/actions/postsActions.js'
 import { useHeader } from '../context/HeaderContext.tsx'
 import PostCreateModal from '../components/PostCreateModal.jsx'
+
+import { useGetPostsQuery, useCreatePostMutation } from '../api/blogApi'
 
 function HomePage() {
   useTitle('Home')
   const [, setHeaderProps] = useHeader()
+
   useEffect(() => {
     setHeaderProps('HomePage')
-  }, [])
+  }, [setHeaderProps])
 
   const [columns, setColumns] = useState(4)
 
@@ -31,15 +32,21 @@ function HomePage() {
     setColumns(event.target.value)
   }
 
-  const dispatch = useDispatch()
-  const { posts, loading, error } = useSelector(state => state.posts)
+  const {
+    data: posts = [],
+    isLoading: loading,
+    isError: hasError,
+    error,
+    refetch,
+  } = useGetPostsQuery(undefined)
 
-  useEffect(() => {
-    dispatch(fetchPosts())
-  }, [dispatch])
+  const [
+    createPostMutation,
+    { isLoading: isCreating, error: createError, reset: resetCreateMutation },
+  ] = useCreatePostMutation()
 
   const handleRetry = () => {
-    dispatch(fetchPosts())
+    refetch()
   }
 
   const [openModal, setOpenModal] = useState(false)
@@ -52,56 +59,78 @@ function HomePage() {
 
   const handleCloseAlert = () => {
     setAlert({ ...alert, open: false })
+    if (createError) {
+      resetCreateMutation()
+    }
+  }
+
+  const handleCreateSuccess = () => {
+    setAlert({
+      open: true,
+      message: 'Пост успешно создан!',
+      severity: 'success',
+    })
+    setOpenModal(false)
+  }
+
+  const handleCreateError = errorMessage => {
+    setAlert({
+      open: true,
+      message: `Ошибка при создании: ${errorMessage}`,
+      severity: 'error',
+    })
+    setOpenModal(false)
+  }
+
+  const handleCloseModal = () => {
+    setOpenModal(false)
+    resetCreateMutation()
   }
 
   return (
     <Box>
-      {openModal && (
-        <PostCreateModal
-          open={openModal}
-          onClose={() => setOpenModal(false)}
-          onSuccess={() => {
-            setAlert({
-              open: true,
-              message: 'Пост успешно создан!',
-              severity: 'success',
-            })
-          }}
-          onError={errorMessage => {
-            setAlert({
-              open: true,
-              message: `Ошибка при создании: ${errorMessage}`,
-              severity: 'error',
-            })
-          }}
-        />
-      )}
+      <PostCreateModal
+        open={openModal}
+        onClose={handleCloseModal}
+        onSuccess={handleCreateSuccess}
+        onError={handleCreateError}
+        createPost={createPostMutation}
+        isCreating={isCreating}
+      />
 
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          flexWrap: 'wrap',
         }}
       >
-        <Button variant="contained" onClick={handleRetry} sx={{ m: 2 }}>
-          Обновить
+        <Button
+          variant="contained"
+          onClick={handleRetry}
+          sx={{ m: 2 }}
+          disabled={loading}
+        >
+          {loading ? 'Обновление...' : 'Обновить'}
         </Button>
         <Button
           variant="contained"
           onClick={() => setOpenModal(true)}
           sx={{ m: 2 }}
+          disabled={isCreating}
         >
-          Создать
+          {isCreating ? 'Создание...' : 'Создать пост'}
         </Button>
         <FormControl sx={{ width: 200, m: 2 }}>
-          <InputLabel id="demo-simple-select-label">Показать по</InputLabel>
+          <InputLabel id="columns-select-label">Показать по</InputLabel>
           <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            value={columns ?? 4} // (columns !== undefined && columns !== null) ? columns : 3
+            labelId="columns-select-label"
+            id="columns-select"
+            value={columns}
             label="Показать по"
             onChange={handleChoose}
+            disabled={loading}
           >
             <MenuItem value={1}>1 колонка</MenuItem>
             <MenuItem value={2}>2 колонки</MenuItem>
@@ -128,19 +157,43 @@ function HomePage() {
 
       {loading && <LinearProgress color="primary" />}
 
-      {!loading && !error && posts.length === 0 && (
-        <Typography>No posts available yet.</Typography>
+      {hasError && !loading && (
+        <Box sx={{ textAlign: 'center', mt: 4 }}>
+          <Alert
+            severity="error"
+            sx={{ mb: 2 }}
+            action={
+              <Button color="inherit" size="small" onClick={handleRetry}>
+                Повторить
+              </Button>
+            }
+          >
+            Ошибка при загрузке постов: {error?.message || 'Неизвестная ошибка'}
+          </Alert>
+        </Box>
       )}
-      {!loading && !error && posts.length > 0 && (
+
+      {!loading && !hasError && posts.length === 0 && (
+        <Typography
+          variant="h6"
+          align="center"
+          sx={{ mt: 4, color: 'text.secondary' }}
+        >
+          Нет доступных постов. Создайте первый пост!
+        </Typography>
+      )}
+
+      {!loading && !hasError && posts.length > 0 && (
         <Box
           sx={{
             ml: 2,
             mr: 2,
             display: 'grid',
             gridTemplateColumns: {
-              xs: `repeat(${columns}, 1fr)`,
+              xs: '1fr',
+              sm: `repeat(${columns}, 1fr)`,
             },
-            gap: 2,
+            gap: 3,
           }}
         >
           {posts.map(post => (

@@ -1,5 +1,3 @@
-import Footer from '../components/Footer.jsx'
-import Header from '../components/Header.js'
 import { Box, Typography, Toolbar } from '@mui/material'
 import { useTitle } from 'react-use'
 import { useHeader } from '../context/HeaderContext.tsx'

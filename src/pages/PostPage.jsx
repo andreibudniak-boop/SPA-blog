@@ -1,10 +1,7 @@
 import Comments from '../components/Comments.jsx'
-import { useParams, useLocation } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useTitle } from 'react-use'
-import { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { fetchComments } from '../store/actions/commentsActions.js'
-import { fetchPost } from '../store/actions/postsActions.js'
+import { useEffect } from 'react'
 import { useHeader } from '../context/HeaderContext.tsx'
 import {
   Box,
@@ -14,6 +11,7 @@ import {
   Toolbar,
   LinearProgress,
 } from '@mui/material'
+import { useGetPostQuery } from '../api/blogApi'
 
 function PostPage() {
   useTitle('PostPage')
@@ -21,25 +19,20 @@ function PostPage() {
   const [, setHeaderProps] = useHeader()
   useEffect(() => {
     setHeaderProps('PostPage')
-  }, [])
+  }, [setHeaderProps])
 
   const { id } = useParams()
-
-  const dispatch = useDispatch()
-  const { post, loadingPost, error } = useSelector(state => state.posts)
+  const postId = parseInt(id)
 
   const {
-    comments,
-    loading: commentsLoading,
-    error: commentsError,
-  } = useSelector(state => state.comments)
+    data: post,
+    isLoading: postLoading,
+    isError: postError,
+  } = useGetPostQuery(postId, {
+    skip: !postId,
+  })
 
-  useEffect(() => {
-    dispatch(fetchPost(id))
-    dispatch(fetchComments(id))
-  }, [id, dispatch])
-
-  if (loadingPost)
+  if (postLoading)
     return (
       <>
         <Box
@@ -52,6 +45,13 @@ function PostPage() {
         >
           <LinearProgress />
         </Box>
+      </>
+    )
+
+  if (postError)
+    return (
+      <>
+        <Typography color="error">Ошибка при загрузке поста</Typography>
       </>
     )
 
@@ -70,11 +70,7 @@ function PostPage() {
             <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
               {post.id}
             </Typography>
-            <Typography
-              variant="h5"
-              component="div"
-              sx={{ color: 'inherit', mb: 1.5 }}
-            >
+            <Typography variant="h5" sx={{ color: 'inherit', mb: 1.5 }}>
               {post.title}
             </Typography>
             <Typography sx={{ color: 'text.info', mb: 1.5 }}>
@@ -87,7 +83,7 @@ function PostPage() {
         </Card>
       </Box>
       <Box sx={{ p: 3 }}>
-        <Comments comments={comments} />
+        <Comments postId={postId} />
       </Box>
       <Toolbar />
     </>

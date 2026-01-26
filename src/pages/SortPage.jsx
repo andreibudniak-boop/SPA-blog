@@ -2,26 +2,25 @@ import SearchBar from '../components/SearchBar.jsx'
 import { useState, useEffect } from 'react'
 import PostCard from '../components/PostCard.jsx'
 import { useTitle } from 'react-use'
-import { useDispatch, useSelector } from 'react-redux'
-import { Toolbar, Box } from '@mui/material'
-import { fetchPosts } from '../store/actions/postsActions.js'
+import { Toolbar, Box, LinearProgress, Alert, Button } from '@mui/material'
 import { useHeader } from '../context/HeaderContext.tsx'
+import { useGetPostsQuery } from '../api/blogApi'
 
 function SortPage() {
   useTitle('sort')
   const [, setHeaderProps] = useHeader()
   useEffect(() => {
     setHeaderProps('SortPage')
-  }, [])
+  }, [setHeaderProps])
 
   const [searchQuery, setSearchQuery] = useState('')
 
-  const dispatch = useDispatch()
-  const { posts, loading, error } = useSelector(state => state.posts)
-
-  useEffect(() => {
-    dispatch(fetchPosts())
-  }, [dispatch])
+  const {
+    data: posts = [],
+    isLoading: loading,
+    isError: error,
+    refetch,
+  } = useGetPostsQuery()
 
   const filterPosts = () => {
     if (!searchQuery.trim()) {
@@ -38,16 +37,40 @@ function SortPage() {
     setSearchQuery(query)
   }
 
+  const handleRetry = () => {
+    refetch()
+  }
+
   return (
     <Box>
       <Toolbar />
       <SearchBar onSearch={handleSearch} />
       <Toolbar />
-      <Box sx={{ ml: 2, mr: 2 }}>
-        {filteredPosts.map(post => (
-          <PostCard key={post.id} post={post} />
-        ))}
-      </Box>
+
+      {loading && <LinearProgress color="primary" />}
+
+      {error && (
+        <Box sx={{ p: 3 }}>
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={handleRetry}>
+                Повторить
+              </Button>
+            }
+          >
+            Ошибка при загрузке постов
+          </Alert>
+        </Box>
+      )}
+
+      {!loading && !error && (
+        <Box sx={{ ml: 2, mr: 2 }}>
+          {filteredPosts.map(post => (
+            <PostCard key={post.id} post={post} />
+          ))}
+        </Box>
+      )}
     </Box>
   )
 }
