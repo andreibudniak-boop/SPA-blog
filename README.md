@@ -50,9 +50,13 @@
 Инструкция по запуску:
   1.git clone <repository-url>
   cd <project-folder>
+  
   2. установка зависимостей 
   npm install
+
   3.Создать файл .env в корне проекта и добавить:
   VITE_API_BASE_URL=https://jsonplaceholder.typicode.com
+  
   4.npm run dev
+  
   5.Приложение будет доступно по адресу: http://localhost:5173
