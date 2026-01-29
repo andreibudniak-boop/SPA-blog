@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState } from 'react'
 import {
   Button,
@@ -11,22 +12,37 @@ import {
   CircularProgress,
 } from '@mui/material'
 
-function PostCreateModal({
+type PostCreateModalProps = {
+  open: boolean
+  onClose: () => void
+  onSuccess: () => void
+  onError: (errorMessage: string) => void
+  createPost: ({}) => Promise<unknown>
+  isCreating: boolean
+}
+
+const PostCreateModal: React.FC<PostCreateModalProps> = ({
   open,
   onClose,
   onSuccess,
   onError,
   createPost,
   isCreating,
-}) {
+}: PostCreateModalProps) => {
   const [localError, setLocalError] = useState('')
-  const [formData, setFormData] = useState({
+
+  type FormData = {
+    title: string
+    body: string
+    userId: number | null
+  }
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     body: '',
-    userId: '',
+    userId: null,
   })
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLocalError('')
 
@@ -46,18 +62,30 @@ function PostCreateModal({
     }
 
     try {
-      await createPost(formData).unwrap()
-      setFormData({ title: '', userId: '', body: '' })
+      await createPost(formData)
+      setFormData({ title: '', userId: null, body: '' })
       onSuccess()
     } catch (error) {
+      const rtkError = error as {
+        data?: {
+          message?: string
+          error?: string
+          statusCode?: number
+        }
+        status?: number
+        message?: string
+      }
       const errorMessage =
-        error?.data?.message || error?.message || 'Неизвестная ошибка'
+        rtkError?.data?.message ||
+        rtkError?.data?.error ||
+        rtkError?.message ||
+        'Неизвестная ошибка'
       setLocalError(errorMessage)
       onError(errorMessage)
     }
   }
 
-  const handleChange = event => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
     setFormData(prev => ({
       ...prev,
@@ -70,7 +98,7 @@ function PostCreateModal({
 
   const handleClose = () => {
     if (!isCreating) {
-      setFormData({ title: '', userId: '', body: '' })
+      setFormData({ title: '', userId: null, body: '' })
       setLocalError('')
       onClose()
     }

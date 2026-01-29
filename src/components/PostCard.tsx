@@ -4,15 +4,14 @@ import { useNavigate } from 'react-router-dom'
 
 interface PostType {
   id: number
-  name: string
   title: string
-  userId: string
+  userId: number
   body: string
 }
 interface PostCardProps {
   post: PostType
 }
-const PostCard: React.FC<PostCardProps> = ({ post }) => {
+const PostCard: React.FC<PostCardProps> = ({ post }: PostCardProps) => {
   const navigate = useNavigate()
   const handleClick = () => {
     navigate(`/posts/${post.id}`)

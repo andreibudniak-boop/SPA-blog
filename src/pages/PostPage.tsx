@@ -2,7 +2,7 @@ import Comments from '../components/Comments.jsx'
 import { useParams } from 'react-router-dom'
 import { useTitle } from 'react-use'
 import { useEffect } from 'react'
-import { useHeader } from '../context/HeaderContext.tsx'
+import { useHeader } from '../context/HeaderContext.js'
 import {
   Box,
   Typography,
@@ -11,7 +11,7 @@ import {
   Toolbar,
   LinearProgress,
 } from '@mui/material'
-import { useGetPostQuery } from '../api/blogApi'
+import { useGetPostQuery } from '../api/blogApi.js'
 
 function PostPage() {
   useTitle('PostPage')
@@ -21,49 +21,37 @@ function PostPage() {
     setHeaderProps('PostPage')
   }, [setHeaderProps])
 
-  const { id } = useParams()
-  const postId = parseInt(id)
+  const { id: postId = '' } = useParams()
 
   const {
     data: post,
     isLoading: postLoading,
     isError: postError,
-  } = useGetPostQuery(postId, {
+  } = useGetPostQuery(Number(postId), {
     skip: !postId,
   })
 
   if (postLoading)
     return (
-      <>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-          }}
-        >
-          <LinearProgress />
-        </Box>
-      </>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+        }}
+      >
+        <LinearProgress />
+      </Box>
     )
 
   if (postError)
-    return (
-      <>
-        <Typography color="error">Ошибка при загрузке поста</Typography>
-      </>
-    )
+    return <Typography color="error">Ошибка при загрузке поста</Typography>
 
-  if (!post)
-    return (
-      <>
-        <Typography>no post</Typography>
-      </>
-    )
+  if (!post) return <Typography>no post</Typography>
 
   return (
-    <>
+    <Box>
       <Box sx={{ p: 3 }}>
         <Card sx={{ mb: 2 }}>
           <CardContent>
@@ -86,7 +74,7 @@ function PostPage() {
         <Comments postId={postId} />
       </Box>
       <Toolbar />
-    </>
+    </Box>
   )
 }
 

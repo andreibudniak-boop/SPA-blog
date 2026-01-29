@@ -1,10 +1,10 @@
-import SearchBar from '../components/SearchBar.jsx'
+import SearchBar from '../components/SearchBar.js'
 import { useState, useEffect } from 'react'
-import PostCard from '../components/PostCard.jsx'
+import PostCard from '../components/PostCard.js'
 import { useTitle } from 'react-use'
 import { Toolbar, Box, LinearProgress, Alert, Button } from '@mui/material'
-import { useHeader } from '../context/HeaderContext.tsx'
-import { useGetPostsQuery } from '../api/blogApi'
+import { useHeader } from '../context/HeaderContext.js'
+import { useGetPostsQuery } from '../api/blogApi.js'
 
 function SortPage() {
   useTitle('sort')
@@ -33,7 +33,7 @@ function SortPage() {
 
   const filteredPosts = filterPosts()
 
-  const handleSearch = query => {
+  const handleSearch = (query: string) => {
     setSearchQuery(query)
   }
 

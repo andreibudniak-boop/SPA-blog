@@ -1,6 +1,6 @@
 import { Box, Typography, Toolbar } from '@mui/material'
 import { useTitle } from 'react-use'
-import { useHeader } from '../context/HeaderContext.tsx'
+import { useHeader } from '../context/HeaderContext.js'
 import { useEffect } from 'react'
 
 function AboutPage() {

@@ -5,14 +5,12 @@ import { useGetCommentsByPostIdQuery } from '../api/blogApi'
 const imgLink =
   'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&dpr=3&h=750&w=1260'
 
-const Comments = ({ postId }) => {
+const Comments = ({ postId }: { postId: string }) => {
   const {
     data: comments = [],
     isLoading,
     isError,
-  } = useGetCommentsByPostIdQuery(postId, {
-    skip: !postId,
-  })
+  } = useGetCommentsByPostIdQuery(postId)
 
   if (isLoading) {
     return (
