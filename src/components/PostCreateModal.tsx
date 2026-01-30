@@ -11,13 +11,16 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material'
+import { Post } from '../api/blogApi'
+
+type NewPostData = Omit<Post, 'id'>
 
 type PostCreateModalProps = {
   open: boolean
   onClose: () => void
   onSuccess: () => void
   onError: (errorMessage: string) => void
-  createPost: ({}) => Promise<unknown>
+  createPost: (postData: NewPostData) => Promise<Post> // Исправленный тип
   isCreating: boolean
 }
 
@@ -31,15 +34,10 @@ const PostCreateModal: React.FC<PostCreateModalProps> = ({
 }: PostCreateModalProps) => {
   const [localError, setLocalError] = useState('')
 
-  type FormData = {
-    title: string
-    body: string
-    userId: number | null
-  }
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<NewPostData>({
     title: '',
     body: '',
-    userId: null,
+    userId: 1,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,7 +61,7 @@ const PostCreateModal: React.FC<PostCreateModalProps> = ({
 
     try {
       await createPost(formData)
-      setFormData({ title: '', userId: null, body: '' })
+      setFormData({ title: '', userId: 1, body: '' })
       onSuccess()
     } catch (error) {
       const rtkError = error as {
@@ -87,10 +85,12 @@ const PostCreateModal: React.FC<PostCreateModalProps> = ({
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
+
     setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: name === 'userId' ? parseInt(value) || 1 : value,
     }))
+
     if (localError) {
       setLocalError('')
     }
@@ -98,7 +98,7 @@ const PostCreateModal: React.FC<PostCreateModalProps> = ({
 
   const handleClose = () => {
     if (!isCreating) {
-      setFormData({ title: '', userId: null, body: '' })
+      setFormData({ title: '', userId: 1, body: '' })
       setLocalError('')
       onClose()
     }
@@ -152,6 +152,7 @@ const PostCreateModal: React.FC<PostCreateModalProps> = ({
               error={!!localError && localError.includes('User ID')}
               disabled={isCreating}
               type="number"
+              inputProps={{ min: 1 }}
               fullWidth
             />
 

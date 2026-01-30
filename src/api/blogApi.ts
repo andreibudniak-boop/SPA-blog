@@ -3,18 +3,28 @@ import { axiosBaseQuery } from './axiosBaseQuery'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
-type Post = {
+export type Post = {
   id: number
   title: string
   body: string
   userId: number
 }
 
-type Comment = {
+export type Comment = {
   id: number
   name: string
   email: string
   body: string
+}
+
+export type GetPostsParams = {
+  title_like?: string
+  userId?: number | string
+  _page?: number
+  _limit?: number
+  _sort?: string
+  _order?: 'asc' | 'desc'
+  [key: string]: any
 }
 
 export const blogApi = createApi({
@@ -22,10 +32,11 @@ export const blogApi = createApi({
   baseQuery: axiosBaseQuery(baseUrl),
   tagTypes: ['Post', 'Comment'],
   endpoints: builder => ({
-    getPosts: builder.query<Post[], void>({
-      query: () => ({
+    getPosts: builder.query<Post[], GetPostsParams | void>({
+      query: params => ({
         url: '/posts',
         method: 'GET',
+        params,
       }),
       providesTags: result =>
         result
@@ -41,7 +52,7 @@ export const blogApi = createApi({
       providesTags: (_, __, id) => [{ type: 'Post', id }],
     }),
 
-    createPost: builder.mutation({
+    createPost: builder.mutation<Post, Omit<Post, 'id'>>({
       query: postData => ({
         url: '/posts',
         method: 'POST',
@@ -50,7 +61,7 @@ export const blogApi = createApi({
       invalidatesTags: ['Post'],
     }),
 
-    getCommentsByPostId: builder.query<Comment[], string>({
+    getCommentsByPostId: builder.query<Comment[], string | number>({
       query: postId => ({
         url: `/posts/${postId}/comments`,
         method: 'GET',

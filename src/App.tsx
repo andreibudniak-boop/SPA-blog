@@ -4,8 +4,8 @@ import AboutPage from './pages/AboutPage.js'
 import SortPage from './pages/SortPage.jsx'
 import PostPage from './pages/PostPage.js'
 import Header from './components/Header.js'
-import { ThemeProvider } from './theme/ThemeContext.jsx'
-import { lightTheme, darkTheme } from './theme/theme.js'
+import { ThemeProvider } from './theme/ThemeContext'
+import { lightTheme, darkTheme } from './theme/theme'
 import {
   ThemeProvider as MuiThemeProvider,
   CssBaseline,
@@ -14,7 +14,7 @@ import {
 import { useTitle } from 'react-use'
 import { Provider } from 'react-redux'
 import store from './app/store.js'
-import { useThemeContext } from './theme/ThemeContext.jsx'
+import { useThemeContext } from './theme/ThemeContext'
 import Footer from './components/Footer.js'
 import { HeaderProvider } from './context/HeaderContext.js'
 import { ToastContainer } from 'react-toastify'

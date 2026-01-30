@@ -14,7 +14,7 @@ import { useTitle } from 'react-use'
 import { useHeader } from '../context/HeaderContext'
 import PostCreateModal from '../components/PostCreateModal'
 import PostsGrid from '../components/PostsGrid'
-import { useGetPostsQuery, useCreatePostMutation } from '../api/blogApi'
+import { useGetPostsQuery, useCreatePostMutation, Post } from '../api/blogApi'
 import { useToast } from '../hooks/useToast'
 
 function HomePage() {
@@ -46,7 +46,6 @@ function HomePage() {
     { isLoading: isCreating, error: createError, reset: resetCreateMutation },
   ] = useCreatePostMutation()
 
-  // Обработка ошибки загрузки
   useEffect(() => {
     if (hasError && error) {
       const errorMessage = getErrorMessage(error)
@@ -54,7 +53,6 @@ function HomePage() {
     }
   }, [hasError, error, toast])
 
-  // Обработка ошибки создания
   useEffect(() => {
     if (createError) {
       const errorMessage = getErrorMessage(createError)
@@ -116,6 +114,15 @@ function HomePage() {
     setOpenModal(false)
   }
 
+  const handleCreatePost = async (postData: Omit<Post, 'id'>) => {
+    try {
+      const result = await createPostMutation(postData).unwrap()
+      return result
+    } catch (error) {
+      throw error
+    }
+  }
+
   return (
     <Box>
       <Box
@@ -132,7 +139,6 @@ function HomePage() {
           onClick={handleRetry}
           sx={{ m: 1 }}
           disabled={loading}
-          startIcon={loading ? undefined : undefined}
         >
           {loading ? 'Обновление...' : 'Обновить'}
         </Button>
@@ -173,9 +179,6 @@ function HomePage() {
           <Typography variant="h5" color="text.secondary" gutterBottom>
             Нет доступных постов
           </Typography>
-          <Button variant="contained" onClick={handleOpenModal} size="large">
-            Создать первый пост
-          </Button>
         </Box>
       )}
 
@@ -188,7 +191,7 @@ function HomePage() {
         onClose={handleCloseModal}
         onSuccess={handleCreateSuccess}
         onError={handleCreateError}
-        createPost={createPostMutation}
+        createPost={handleCreatePost}
         isCreating={isCreating}
       />
     </Box>

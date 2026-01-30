@@ -1,53 +1,74 @@
-import SearchBar from '../components/SearchBar.js'
-import { useState, useEffect } from 'react'
-import PostCard from '../components/PostCard.js'
+import SearchBar from '../components/SearchBar'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import PostCard from '../components/PostCard'
 import { useTitle } from 'react-use'
-import { Toolbar, Box, LinearProgress, Alert, Button } from '@mui/material'
-import { useHeader } from '../context/HeaderContext.js'
-import { useGetPostsQuery } from '../api/blogApi.js'
+import {
+  Toolbar,
+  Box,
+  LinearProgress,
+  Alert,
+  Button,
+  Typography,
+  CircularProgress,
+} from '@mui/material'
+import { useHeader } from '../context/HeaderContext'
+import { useGetPostsQuery } from '../api/blogApi'
+import { useDebounce } from '../hooks/useDebounce'
 
 function SortPage() {
-  useTitle('sort')
+  useTitle('Сортировка и поиск')
   const [, setHeaderProps] = useHeader()
+
   useEffect(() => {
     setHeaderProps('SortPage')
   }, [setHeaderProps])
 
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
 
   const {
     data: posts = [],
     isLoading: loading,
     isError: error,
+    isFetching: fetching,
     refetch,
-  } = useGetPostsQuery()
+  } = useGetPostsQuery(
+    debouncedSearchQuery.trim()
+      ? { title_like: debouncedSearchQuery }
+      : undefined
+  )
 
-  const filterPosts = () => {
-    if (!searchQuery.trim()) {
-      return posts
-    }
+  const debouncedSetSearch = useDebounce((query: string) => {
+    setDebouncedSearchQuery(query)
+  }, 300)
 
-    const query = searchQuery.toLowerCase()
-    return posts.filter(post => post.title.toLowerCase().includes(query))
-  }
+  const handleSearch = useCallback(
+    (query: string) => {
+      setSearchQuery(query)
+      debouncedSetSearch(query)
+    },
+    [debouncedSetSearch]
+  )
 
-  const filteredPosts = filterPosts()
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query)
-  }
-
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
     refetch()
-  }
+  }, [refetch])
 
   return (
-    <Box>
+    <Box sx={{ minHeight: '100vh' }}>
       <Toolbar />
-      <SearchBar onSearch={handleSearch} />
+
+      <SearchBar onSearch={handleSearch} debounceDelay={300} />
+
       <Toolbar />
 
       {loading && <LinearProgress color="primary" />}
+
+      {fetching && !loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+          <CircularProgress size={24} />
+        </Box>
+      )}
 
       {error && (
         <Box sx={{ p: 3 }}>
@@ -66,9 +87,51 @@ function SortPage() {
 
       {!loading && !error && (
         <Box sx={{ ml: 2, mr: 2 }}>
-          {filteredPosts.map(post => (
-            <PostCard key={post.id} post={post} />
-          ))}
+          {posts.length === 0 ? (
+            <Box
+              sx={{
+                textAlign: 'center',
+                py: 8,
+                color: 'text.secondary',
+              }}
+            >
+              {searchQuery ? (
+                <>
+                  <Typography variant="h6" gutterBottom>
+                    Ничего не найдено
+                  </Typography>
+                  <Typography variant="body1">
+                    По запросу "{searchQuery}" посты не найдены
+                  </Typography>
+                </>
+              ) : (
+                <Typography variant="h6">Пока нет постов</Typography>
+              )}
+            </Box>
+          ) : (
+            <>
+              {searchQuery && (
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    mb: 2,
+                    color: 'text.secondary',
+                    fontStyle: 'italic',
+                  }}
+                >
+                  {fetching
+                    ? `Ищем по запросу "${searchQuery}"...`
+                    : `Найдено постов: ${posts.length}${debouncedSearchQuery !== searchQuery ? ' (идет поиск...)' : ''}`}
+                </Typography>
+              )}
+
+              {posts.map(post => (
+                <Box key={post.id} sx={{ mb: 3 }}>
+                  <PostCard post={post} />
+                </Box>
+              ))}
+            </>
+          )}
         </Box>
       )}
     </Box>
