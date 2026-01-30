@@ -1,5 +1,5 @@
 import React from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Button,
   Dialog,
@@ -20,7 +20,7 @@ type PostCreateModalProps = {
   onClose: () => void
   onSuccess: () => void
   onError: (errorMessage: string) => void
-  createPost: (postData: NewPostData) => Promise<Post> // Исправленный тип
+  createPost: (postData: NewPostData) => Promise<Post>
   isCreating: boolean
 }
 
@@ -39,6 +39,29 @@ const PostCreateModal: React.FC<PostCreateModalProps> = ({
     body: '',
     userId: 1,
   })
+
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        title: '',
+        body: '',
+        userId: 1,
+      })
+      setLocalError('')
+    }
+  }, [open])
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target
+
+    setFormData(prev => ({
+      ...prev,
+      [name]:
+        name === 'userId' ? (value === '' ? '' : parseInt(value) || 1) : value,
+    }))
+
+    if (localError) setLocalError('')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,19 +103,6 @@ const PostCreateModal: React.FC<PostCreateModalProps> = ({
         'Неизвестная ошибка'
       setLocalError(errorMessage)
       onError(errorMessage)
-    }
-  }
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target
-
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'userId' ? parseInt(value) || 1 : value,
-    }))
-
-    if (localError) {
-      setLocalError('')
     }
   }
 

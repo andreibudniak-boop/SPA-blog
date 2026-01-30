@@ -1,15 +1,8 @@
 import { toast, ToastOptions, TypeOptions } from 'react-toastify'
+import { TOAST_CONFIG } from '../toast-config'
 
 export const useToast = () => {
-  const defaultOptions: ToastOptions = {
-    position: 'top-center',
-    autoClose: 5000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    theme: 'colored',
-  }
+  const defaultOptions: ToastOptions = TOAST_CONFIG
 
   const showToast = (
     type: TypeOptions,

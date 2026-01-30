@@ -1,7 +1,6 @@
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom'
 import HomePage from './pages/HomePage.js'
 import AboutPage from './pages/AboutPage.js'
-import SortPage from './pages/SortPage.jsx'
 import PostPage from './pages/PostPage.js'
 import Header from './components/Header.js'
 import { ThemeProvider } from './theme/ThemeContext'
@@ -19,6 +18,7 @@ import Footer from './components/Footer.js'
 import { HeaderProvider } from './context/HeaderContext.js'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { TOAST_CONFIG } from './toast-config'
 
 const AppContent = () => {
   const { mode } = useThemeContext()
@@ -29,25 +29,13 @@ const AppContent = () => {
       <MuiThemeProvider theme={theme}>
         <CssBaseline />
         <Router>
-          <ToastContainer
-            position="top-center"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="colored"
-          />
+          <ToastContainer {...TOAST_CONFIG} />
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Header title={''} />
             <Box sx={{ overflow: 'auto', height: 'calc(100vh - 64px - 64px)' }}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/about" element={<AboutPage />} />
-                <Route path="/sort" element={<SortPage />} />
                 <Route path="/posts/:id" element={<PostPage />} />
               </Routes>
             </Box>

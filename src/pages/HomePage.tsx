@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Box,
   Typography,
@@ -16,6 +16,8 @@ import PostCreateModal from '../components/PostCreateModal'
 import PostsGrid from '../components/PostsGrid'
 import { useGetPostsQuery, useCreatePostMutation, Post } from '../api/blogApi'
 import { useToast } from '../hooks/useToast'
+import { useDebounce } from '../hooks/useDebounce'
+import SearchBar from '../components/SearchBar'
 
 function HomePage() {
   useTitle('Home')
@@ -29,6 +31,9 @@ function HomePage() {
   const [columns, setColumns] = useState<number>(4)
   const [openModal, setOpenModal] = useState(false)
 
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
+
   const handleChooseColumns = (event: SelectChangeEvent<number>) => {
     setColumns(event.target.value as number)
   }
@@ -38,8 +43,25 @@ function HomePage() {
     isLoading: loading,
     isError: hasError,
     error,
+    isFetching: fetching,
     refetch,
-  } = useGetPostsQuery()
+  } = useGetPostsQuery(
+    debouncedSearchQuery.trim()
+      ? { title_like: debouncedSearchQuery }
+      : undefined
+  )
+
+  const debouncedSetSearch = useDebounce((query: string) => {
+    setDebouncedSearchQuery(query)
+  }, 300)
+
+  const handleSearch = useCallback(
+    (query: string) => {
+      setSearchQuery(query)
+      debouncedSetSearch(query)
+    },
+    [debouncedSetSearch]
+  )
 
   const [
     createPostMutation,
@@ -170,20 +192,55 @@ function HomePage() {
             ))}
           </Select>
         </FormControl>
+        <SearchBar onSearch={handleSearch} debounceDelay={300} />
       </Box>
 
       {loading && <LinearProgress color="primary" sx={{ mb: 2 }} />}
 
-      {!loading && !hasError && posts.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h5" color="text.secondary" gutterBottom>
-            Нет доступных постов
-          </Typography>
-        </Box>
-      )}
+      {!loading && !error && (
+        <Box sx={{ ml: 2, mr: 2 }}>
+          {posts.length === 0 ? (
+            <Box
+              sx={{
+                textAlign: 'center',
+                py: 8,
+                color: 'text.secondary',
+              }}
+            >
+              {searchQuery ? (
+                <>
+                  <Typography variant="h6" gutterBottom>
+                    Ничего не найдено
+                  </Typography>
+                  <Typography variant="body1">
+                    По запросу "{searchQuery}" посты не найдены
+                  </Typography>
+                </>
+              ) : (
+                <Typography variant="h6">Пока нет постов</Typography>
+              )}
+            </Box>
+          ) : (
+            <>
+              {searchQuery && (
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    mb: 2,
+                    color: 'text.secondary',
+                    fontStyle: 'italic',
+                  }}
+                >
+                  {fetching
+                    ? `Ищем по запросу "${searchQuery}"...`
+                    : `Найдено постов: ${posts.length}${debouncedSearchQuery !== searchQuery ? ' (идет поиск...)' : ''}`}
+                </Typography>
+              )}
 
-      {!loading && !hasError && posts.length > 0 && (
-        <PostsGrid posts={posts} columns={columns} />
+              {<PostsGrid posts={posts} columns={columns} />}
+            </>
+          )}
+        </Box>
       )}
 
       <PostCreateModal

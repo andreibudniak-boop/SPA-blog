@@ -29,9 +29,9 @@ const Header: React.FC<HeaderProps> = props => {
               О Проекте
             </Button>
 
-            <Button component={Link} to="/sort" sx={{ color: 'white' }}>
+            {/* <Button component={Link} to="/sort" sx={{ color: 'white' }}>
               Сортировка
-            </Button>
+            </Button> */}
           </Box>
         </Toolbar>
       </AppBar>
