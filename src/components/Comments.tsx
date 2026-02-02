@@ -2,10 +2,8 @@ import React from 'react'
 import { Paper, Divider, Grid, Avatar, Box, Typography } from '@mui/material'
 import { useGetCommentsByPostIdQuery } from '../api/blogApi'
 
-const imgLink =
-  'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&dpr=3&h=750&w=1260'
-
 const Comments = ({ postId }: { postId: string }) => {
+  const imgLink = import.meta.env.VITE_EXAMPLE_IMAGE
   const {
     data: comments = [],
     isLoading,

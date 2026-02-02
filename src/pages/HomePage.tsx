@@ -10,33 +10,43 @@ import {
   LinearProgress,
   SelectChangeEvent,
 } from '@mui/material'
-import { useTitle } from 'react-use'
-import { useHeader } from '../context/HeaderContext'
 import PostCreateModal from '../components/PostCreateModal'
 import PostsGrid from '../components/PostsGrid'
 import { useGetPostsQuery, useCreatePostMutation, Post } from '../api/blogApi'
-import { useToast } from '../hooks/useToast'
 import { useDebounce } from '../hooks/useDebounce'
+import { usePostModal } from '../hooks/usePostModal'
 import SearchBar from '../components/SearchBar'
+import { toast } from 'react-toastify'
+import { usePageTitle } from '../hooks/usePageTitle'
+
+export const getErrorMessage = (error: any): string => {
+  if (typeof error === 'string') return error
+  if (error?.data?.message) return error.data.message
+  if (error?.message) return error.message
+  return 'Неизвестная ошибка'
+}
 
 function HomePage() {
-  useTitle('Home')
-  const toast = useToast()
-  const [, setHeaderProps] = useHeader()
+  usePageTitle('Home', 'HomePage')
 
-  useEffect(() => {
-    setHeaderProps('HomePage')
-  }, [setHeaderProps])
-
-  const [columns, setColumns] = useState<number>(4)
-  const [openModal, setOpenModal] = useState(false)
-
+  const [columns, setColumns] = useState(4)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
 
   const handleChooseColumns = (event: SelectChangeEvent<number>) => {
-    setColumns(event.target.value as number)
+    setColumns(event.target.value)
   }
+
+  const {
+    openModal,
+    isCreating,
+    createError,
+    handleOpenModal,
+    handleCloseModal,
+    handleCreateSuccess,
+    handleCreateError,
+    handleCreatePost,
+  } = usePostModal()
 
   const {
     data: posts = [],
@@ -63,32 +73,12 @@ function HomePage() {
     [debouncedSetSearch]
   )
 
-  const [
-    createPostMutation,
-    { isLoading: isCreating, error: createError, reset: resetCreateMutation },
-  ] = useCreatePostMutation()
-
   useEffect(() => {
     if (hasError && error) {
       const errorMessage = getErrorMessage(error)
       toast.error(`Ошибка загрузки постов: ${errorMessage}`)
     }
   }, [hasError, error, toast])
-
-  useEffect(() => {
-    if (createError) {
-      const errorMessage = getErrorMessage(createError)
-      toast.error(`Ошибка создания поста: ${errorMessage}`)
-      resetCreateMutation()
-    }
-  }, [createError, resetCreateMutation, toast])
-
-  const getErrorMessage = (error: any): string => {
-    if (typeof error === 'string') return error
-    if (error?.data?.message) return error.data.message
-    if (error?.message) return error.message
-    return 'Неизвестная ошибка'
-  }
 
   const handleRetry = () => {
     const toastId = toast.loading('Обновление данных...', {
@@ -116,46 +106,21 @@ function HomePage() {
       })
   }
 
-  const handleOpenModal = () => {
-    setOpenModal(true)
-  }
-
-  const handleCloseModal = () => {
-    setOpenModal(false)
-    resetCreateMutation()
-  }
-
-  const handleCreateSuccess = () => {
-    toast.success('Пост успешно создан!')
-    setOpenModal(false)
-  }
-
-  const handleCreateError = (error: any) => {
-    const errorMessage = getErrorMessage(error)
-    toast.error(`Ошибка при создании поста: ${errorMessage}`)
-    setOpenModal(false)
-  }
-
-  const handleCreatePost = async (postData: Omit<Post, 'id'>) => {
-    try {
-      const result = await createPostMutation(postData).unwrap()
-      return result
-    } catch (error) {
-      throw error
-    }
-  }
-
   return (
     <Box>
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'flex-end',
           flexWrap: 'wrap',
+          gap: 3,
           py: 2,
+          px: 3,
         }}
       >
+        <SearchBar onSearch={handleSearch} debounceDelay={300} />
+
         <Button
           variant="contained"
           onClick={handleRetry}
@@ -175,31 +140,27 @@ function HomePage() {
           {isCreating ? 'Создание...' : 'Создать пост'}
         </Button>
 
-        <FormControl sx={{ minWidth: 200, m: 1 }}>
-          <InputLabel id="columns-select-label">Колонок</InputLabel>
-          <Select
-            labelId="columns-select-label"
-            id="columns-select"
-            value={columns}
-            label="Колонок"
-            onChange={handleChooseColumns}
-            disabled={loading}
-          >
-            {[1, 2, 3, 4].map(num => (
-              <MenuItem key={num} value={num}>
-                {num} колонк{num == 1 ? 'а' : 'и'}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <SearchBar onSearch={handleSearch} debounceDelay={300} />
+        <Select
+          labelId="columns-select-label"
+          id="columns-select"
+          value={columns}
+          size="small"
+          onChange={handleChooseColumns}
+          disabled={loading}
+        >
+          {[1, 2, 3, 4].map(num => (
+            <MenuItem key={num} value={num}>
+              колонок: {num}
+            </MenuItem>
+          ))}
+        </Select>
       </Box>
 
       {loading && <LinearProgress color="primary" sx={{ mb: 2 }} />}
 
       {!loading && !error && (
         <Box sx={{ ml: 2, mr: 2 }}>
-          {posts.length === 0 ? (
+          {posts.length === 0 && searchQuery && (
             <Box
               sx={{
                 textAlign: 'center',
@@ -207,37 +168,31 @@ function HomePage() {
                 color: 'text.secondary',
               }}
             >
-              {searchQuery ? (
-                <>
-                  <Typography variant="h6" gutterBottom>
-                    Ничего не найдено
-                  </Typography>
-                  <Typography variant="body1">
-                    По запросу "{searchQuery}" посты не найдены
-                  </Typography>
-                </>
-              ) : (
-                <Typography variant="h6">Пока нет постов</Typography>
-              )}
+              <Typography variant="h6" gutterBottom>
+                Ничего не найдено
+              </Typography>
+              <Typography variant="body1">
+                По запросу "{searchQuery}" посты не найдены
+              </Typography>
             </Box>
-          ) : (
-            <>
-              {searchQuery && (
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    mb: 2,
-                    color: 'text.secondary',
-                    fontStyle: 'italic',
-                  }}
-                >
-                  {fetching
-                    ? `Ищем по запросу "${searchQuery}"...`
-                    : `Найдено постов: ${posts.length}${debouncedSearchQuery !== searchQuery ? ' (идет поиск...)' : ''}`}
-                </Typography>
-              )}
+          )}
 
-              {<PostsGrid posts={posts} columns={columns} />}
+          {posts.length !== 0 && (
+            <>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  mb: 2,
+                  color: 'text.secondary',
+                  fontStyle: 'italic',
+                }}
+              >
+                {fetching
+                  ? `Ищем по запросу "${searchQuery}"...`
+                  : `Найдено постов: ${posts.length}${debouncedSearchQuery !== searchQuery ? ' (идет поиск...)' : ''}`}
+              </Typography>
+
+              <PostsGrid posts={posts} columns={columns} />
             </>
           )}
         </Box>

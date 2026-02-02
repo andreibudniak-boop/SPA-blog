@@ -5,7 +5,9 @@ import { useEffect } from 'react'
 
 function AboutPage() {
   useTitle('About')
+
   const [, setHeaderProps] = useHeader()
+
   useEffect(() => {
     setHeaderProps('AboutPage')
   }, [])

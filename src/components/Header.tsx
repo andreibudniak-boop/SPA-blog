@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material'
 import ThemeToggle from './ThemeToggle'
 import { useHeader } from '../context/HeaderContext'
+import { Nav } from './Nav'
 
 interface HeaderProps {
   title: string
@@ -19,20 +20,10 @@ const Header: React.FC<HeaderProps> = props => {
               {headerProps}
             </Typography>
           )}
+
           <ThemeToggle />
-          <Box>
-            <Button component={Link} to="/" sx={{ mr: 1, color: 'white' }}>
-              Главная
-            </Button>
 
-            <Button component={Link} to="/about" sx={{ mr: 1, color: 'white' }}>
-              О Проекте
-            </Button>
-
-            {/* <Button component={Link} to="/sort" sx={{ color: 'white' }}>
-              Сортировка
-            </Button> */}
-          </Box>
+          <Nav />
         </Toolbar>
       </AppBar>
       <Toolbar />

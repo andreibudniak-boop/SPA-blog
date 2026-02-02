@@ -16,12 +16,12 @@ import { useGetPostQuery } from '../api/blogApi.js'
 function PostPage() {
   useTitle('PostPage')
 
+  const { id: postId = '' } = useParams()
   const [, setHeaderProps] = useHeader()
+
   useEffect(() => {
     setHeaderProps('PostPage')
   }, [setHeaderProps])
-
-  const { id: postId = '' } = useParams()
 
   const {
     data: post,

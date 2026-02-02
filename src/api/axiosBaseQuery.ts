@@ -5,7 +5,7 @@ type QueryProps = {
   url: string
   method: string
   data?: string
-  params?: Record<string, any>
+  params?: Record<string, unknown>
 }
 
 export const axiosBaseQuery = (baseUrl: string): BaseQueryFn => {

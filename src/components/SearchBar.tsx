@@ -1,7 +1,6 @@
 import React, { ChangeEvent, useState, useEffect } from 'react'
 import {
   TextField,
-  Button,
   Toolbar,
   IconButton,
   InputAdornment,
@@ -22,6 +21,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [query, setQuery] = useState('')
   const [isTyping, setIsTyping] = useState(false)
 
+  // TODO: у тебя два дебаунса: это лишнее
   const debouncedSearch = useDebounce(onSearch, debounceDelay)
 
   const handleSearch = (e: ChangeEvent<HTMLInputElement>): void => {
@@ -37,6 +37,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     onSearch('')
   }
 
+  // useDeferredValue
   useEffect(() => {
     if (isTyping) {
       const timer = setTimeout(() => setIsTyping(false), debounceDelay)
@@ -45,13 +46,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [isTyping, debounceDelay])
 
   return (
-    <Toolbar sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-      <Box sx={{ position: 'relative', width: '100%', maxWidth: 600 }}>
+    <Toolbar disableGutters sx={{ mr: 'auto', pl: 0, px: 0 }}>
+      <Box sx={{ position: 'relative', width: '100%', maxWidth: 600, pl: 0 }}>
         <TextField
           fullWidth
           id="outlined-basic"
-          label="Поиск по заголовку"
           variant="outlined"
+          size="small"
           value={query}
           onChange={handleSearch}
           InputProps={{

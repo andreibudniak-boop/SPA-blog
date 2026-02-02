@@ -17,14 +17,17 @@ export type Comment = {
   body: string
 }
 
-export type GetPostsParams = {
+type Obj = {
+  [key: string]: unknown
+} // === Record<string, unknown>
+
+export type GetPostsParams = Obj & {
   title_like?: string
   userId?: number | string
   _page?: number
   _limit?: number
   _sort?: string
   _order?: 'asc' | 'desc'
-  [key: string]: any
 }
 
 export const blogApi = createApi({
