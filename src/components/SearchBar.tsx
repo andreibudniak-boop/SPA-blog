@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState, useEffect } from 'react'
+import React, { ChangeEvent, useState, useEffect, useRef } from 'react'
 import {
   TextField,
   Toolbar,
@@ -7,43 +7,51 @@ import {
   Box,
 } from '@mui/material'
 import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material'
-import { useDebounce } from '../hooks/useDebounce'
 
 interface SearchBarProps {
   onSearch: (query: string) => void
-  debounceDelay?: number
+  debounceDelay: number
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({
-  onSearch,
-  debounceDelay = 300,
-}) => {
+type Timer = ReturnType<typeof setTimeout>
+
+const SearchBar: React.FC<SearchBarProps> = ({ onSearch, debounceDelay }) => {
   const [query, setQuery] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-
-  // TODO: у тебя два дебаунса: это лишнее
-  const debouncedSearch = useDebounce(onSearch, debounceDelay)
+  const typingTimerRef = useRef<Timer | null>(null)
 
   const handleSearch = (e: ChangeEvent<HTMLInputElement>): void => {
     const value = e.target.value
     setQuery(value)
     setIsTyping(true)
-    debouncedSearch(value)
+
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current)
+    }
+
+    typingTimerRef.current = setTimeout(() => {
+      setIsTyping(false)
+    }, debounceDelay)
+
+    onSearch(value)
   }
 
   const handleClean = (): void => {
     setQuery('')
     setIsTyping(false)
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current)
+    }
     onSearch('')
   }
 
-  // useDeferredValue
   useEffect(() => {
-    if (isTyping) {
-      const timer = setTimeout(() => setIsTyping(false), debounceDelay)
-      return () => clearTimeout(timer)
+    return () => {
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current)
+      }
     }
-  }, [isTyping, debounceDelay])
+  }, [])
 
   return (
     <Toolbar disableGutters sx={{ mr: 'auto', pl: 0, px: 0 }}>
